@@ -1,6 +1,5 @@
 "use strict";
 
-import fs from "fs";
 import { parseInput } from "./parse_input.js";
 import { point, set } from "./data_structures.js";
 import { areTouching, moveTowards } from "./logic.js";
