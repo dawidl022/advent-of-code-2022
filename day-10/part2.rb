@@ -1,17 +1,34 @@
-total = 0
-$x_reg = 1
-$cc = 0
-
-def display_crt_pixel
-  if $x_reg >= $cc % 40 - 1 && $x_reg <= $cc % 40 + 1
-    print '#'
-  else
-    print '.'
+class Handheld
+  def initialize
+    @x_reg = 1
+    @cc = 0
   end
-  if ($cc + 1) % 40 == 0
-    puts
+
+  def display_crt_pixel
+    x_pos = @cc % 40
+    if @x_reg >= x_pos - 1 && @x_reg <= x_pos + 1
+      print '#'
+    else
+      print '.'
+    end
+    if x_pos == 39
+      puts
+    end
+  end
+
+  def process(instruction)
+    display_crt_pixel
+    @cc += 1
+
+    if instruction[0] == "addx"
+      display_crt_pixel
+      @cc += 1
+      @x_reg += Integer(instruction[1])
+    end
   end
 end
+
+handheld = Handheld.new
 
 loop do
   line = gets
@@ -20,28 +37,5 @@ loop do
   end
   line = line.chomp.split
 
-
-  if line[0] == "noop"
-    if ($cc - 20) % 40 == 39
-      total += $x_reg * ($cc + 1)
-    end
-    display_crt_pixel
-    $cc += 1
-  else
-    if ($cc - 20) % 40 == 39
-      total += $x_reg * ($cc + 1)
-    end
-    display_crt_pixel
-    $cc += 1
-    if ($cc - 20) % 40 == 39
-      total += $x_reg * ($cc + 1)
-    end
-    display_crt_pixel
-    $cc += 1
-    $x_reg += Integer(line[1])
-  end
+  handheld.process(line)
 end
-
-puts total
-puts $x_reg
-puts $cc

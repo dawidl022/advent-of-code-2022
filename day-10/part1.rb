@@ -1,6 +1,31 @@
-total = 0
-x_reg = 1
-cc = 0
+class Handheld
+  attr_reader :total
+
+  def initialize
+    @x_reg = 1
+    @cc = 0
+    @total = 0
+  end
+
+  def update_total
+    if (@cc - 20) % 40 == 39
+      @total += @x_reg * (@cc + 1)
+    end
+  end
+
+  def process(instruction)
+    update_total
+    @cc += 1
+
+    if instruction[0] == "addx"
+      update_total
+      @cc += 1
+      @x_reg += Integer(instruction[1])
+    end
+  end
+end
+
+handheld = Handheld.new
 
 loop do
   line = gets
@@ -9,25 +34,7 @@ loop do
   end
   line = line.chomp.split
 
-
-  if line[0] == "noop"
-    if (cc - 20) % 40 == 39
-      total += x_reg * (cc + 1)
-    end
-    cc += 1
-  else
-    if (cc - 20) % 40 == 39
-      total += x_reg * (cc + 1)
-    end
-    cc += 1
-    if (cc - 20) % 40 == 39
-      total += x_reg * (cc + 1)
-    end
-    cc += 1
-    x_reg += Integer(line[1])
-  end
+  handheld.process(line)
 end
 
-puts total
-puts x_reg
-puts cc
+puts handheld.total
