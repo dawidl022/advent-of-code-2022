@@ -29,7 +29,7 @@ void enqueueNeighboursIfAtMost(Array* lines, StepQueue* queue, PointSet* set, in
 
 void enqueuePointIfNotVisited(Array* lines, StepQueue* queue, PointSet* set, int i, int j, char maxChar, int count)
 {
-    if (lines->arr[i][j] <= maxChar) {
+    if (lines->arr[i][j] != 'E' && lines->arr[i][j] <= maxChar || maxChar >= 'z') {
         Point point = { .i = i, .j = j };
         if (contains(set, point) == 0) {
             add(set, point);
@@ -60,7 +60,7 @@ int main()
             if (lines->arr[i][j] == 'S') {
                 Point origin = { .i = i, .j = j };
                 add(set, origin);
-                enqueueNeighboursIfAtMost(lines, q, set, i, j, 'a', 1);
+                enqueueNeighboursIfAtMost(lines, q, set, i, j, 'b', 1);
             }
         }
     }
