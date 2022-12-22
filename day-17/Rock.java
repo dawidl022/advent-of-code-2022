@@ -1,6 +1,7 @@
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 public class Rock implements Cloneable {
 
@@ -10,58 +11,72 @@ public class Rock implements Cloneable {
 
     public Rock(Point... points) {
         this.points = points;
-        this.maxXOffset = 6 - Arrays.stream(points).max(Comparator.comparingInt(Point::getX)).get().getX();
+        this.maxXOffset = 6 - Arrays.stream(points).max(Comparator.comparingInt(Point::x)).get().x();
     }
 
     public void move(int x, int y) {
-        int xCoord = offset.getX() + x;
+        int xCoord = offset.x() + x;
         if (xCoord < 0) {
             xCoord = 0;
         }
         if (xCoord > maxXOffset) {
             xCoord = maxXOffset;
         }
-        offset = new Point(xCoord, offset.getY() + y);
+        offset = new Point(xCoord, offset.y() + y);
     }
 
     public List<Point> bottomEdge() {
         return  Arrays.stream(points)
-            .filter(point -> point.getY() == 0)
-            .map(point -> new Point(point.getX() + offset.getX(), point.getY() + offset.getY())).toList();
+            .filter(point -> point.y() == 0)
+            .map(point -> new Point(point.x() + offset.x(), offset.y())).toList();
     }
-
-    public List<Point> leftEdge() {
-        return  Arrays.stream(points)
-            .filter(point -> point.getX() == leftMostXInRow(point.getY()))
-            .map(point -> new Point(point.getX() + offset.getX(), point.getY() + offset.getY())).toList();
-    }
-
-    private int leftMostXInRow(int y) {
-        return Arrays.stream(points)
-            .filter(point -> point.getY() == y).min(Comparator.comparingInt(Point::getX)).get().getX();
-    }
-
-    public List<Point> rightEdge() {
-        return  Arrays.stream(points)
-            .filter(point -> point.getX() == rightMostXInRow(point.getY()))
-            .map(point -> new Point(point.getX() + offset.getX(), point.getY() + offset.getY())).toList();
-    }
-
-    private int rightMostXInRow(int y) {
-        return Arrays.stream(points)
-            .filter(point -> point.getY() == y).max(Comparator.comparingInt(Point::getX)).get().getX();
-    }
-
 
     public List<Point> points() {
         return Arrays.stream(points)
-            .map(point -> new Point(point.getX() + offset.getX(), point.getY() + offset.getY()))
+            .map(point -> new Point(point.x() + offset.x(), point.y() + offset.y()))
             .toList();
     }
 
-    public int highest() {
+    public int highestYCoord() {
         return Arrays.stream(points)
-            .max(Comparator.comparingInt(Point::getY)).get().getY() + offset.getY();
+            .max(Comparator.comparingInt(Point::y)).get().y() + offset.y();
+    }
+
+    public boolean canFall(Set<Point> rocksPoints) {
+        return !isOnFloor() && !isTouchingOtherRock(rocksPoints);
+    }
+
+    private boolean isTouchingOtherRock(Set<Point> rocksPoints) {
+        for (Point p : points()) {
+            if (rocksPoints.contains(new Point(p.x(), p.y() - 1))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isOnFloor() {
+        return bottomEdge().get(0).y() == 0;
+    }
+
+    public void moveLeftIfPossible(Set<Point> rocksPoints) {
+        move(-1, 0);
+        for (Point p: points()) {
+            if (rocksPoints.contains(p)) {
+                move(1, 0);
+                break;
+            }
+        }
+    }
+
+    public void moveRightIfPossible(Set<Point> rocksPoints) {
+        move(1, 0);
+        for (Point p: points()) {
+            if (rocksPoints.contains(p)) {
+                move(-1, 0);
+                break;
+            }
+        }
     }
 
     @Override

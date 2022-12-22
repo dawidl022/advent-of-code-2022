@@ -8,38 +8,27 @@ public class Part2 {
         Iterator<Direction> gasSource = new GasSource(pattern).iterator();
 
         Set<Point> rocksPoints = new HashSet<>();
-        int highest = -1;
-        int repeatingI = 0;
-        int subtracting = 0;
-        List<List<Integer>> repeating = new ArrayList<>();
-
+        List<List<Integer>> repeatingXCoords = new ArrayList<>();
         List<Integer> heightAdditions = new ArrayList<>();
-        int i;
 
-        for (i = 0; i < pattern.length() * 10; i++) {
+        int highest = -1;
+        int surplusHeight = 0;
+
+        int i;
+        int repeatingRockCount;
+
+        for (i = 0, repeatingRockCount = 0; repeatingRockCount < 5; i++) {
             Rock rock = rockSource.next();
             rock.move(0, highest + 4);
             boolean gasPushing = true;
 
-            while (gasPushing || !rockAtBottom(rock) && !rockTouchingOtherRock(rocksPoints, rock)) {
+            while (gasPushing || rock.canFall(rocksPoints)) {
                 if (gasPushing) {
                     Direction dirToMove = gasSource.next();
                     if (dirToMove == Direction.LEFT) {
-                        rock.move(-1, 0);
-                        for (Point p : rock.points()) {
-                            if (rocksPoints.contains(p)) {
-                                rock.move(1, 0);
-                                break;
-                            }
-                        }
+                        rock.moveLeftIfPossible(rocksPoints);
                     } else {
-                        rock.move(1, 0);
-                        for (Point p : rock.points()) {
-                            if (rocksPoints.contains(p)) {
-                                rock.move(-1, 0);
-                                break;
-                            }
-                        }
+                        rock.moveRightIfPossible(rocksPoints);
                     }
                 } else {
                     rock.move(0, -1);
@@ -48,61 +37,48 @@ public class Part2 {
             }
 
             if (i >= pattern.length()) {
-                heightAdditions.add(Math.max(0, rock.highest() - highest));
+                heightAdditions.add(Math.max(0, rock.highestYCoord() - highest));
             }
 
-            if (i >= pattern.length() && i < pattern.length() + 5) {
-                repeating.add(rock.points().stream().map(Point::getX).toList());
-                subtracting += Math.max(0, rock.highest() - highest);
-            } else if (i >= pattern.length() * 2 && (i % pattern.length() % 5 == 0 || repeatingI > 0)) {
-                if (repeating.get(i % pattern.length() % 5).equals(rock.points().stream().map(Point::getX).toList())) {
-                    System.out.println(i);
-                    repeatingI++;
-                } else {
-                    repeatingI = 0;
+            List<Integer> rockXCoords = rock.points().stream().map(Point::x).toList();
+
+            if (isFirst5AfterPattern(pattern, i)) {
+                repeatingXCoords.add(rockXCoords);
+                surplusHeight += Math.max(0, rock.highestYCoord() - highest);
+            } else {
+                int rockOffset = i % pattern.length() % 5;
+                if (i >= pattern.length() * 2 && (rockOffset == 0 || repeatingRockCount > 0)) {
+                    if (repeatingXCoords.get(rockOffset).equals(rockXCoords)) {
+                        repeatingRockCount++;
+                    } else {
+                        repeatingRockCount = 0;
+                    }
                 }
-
             }
-            if (rock.highest() > highest) {
-                highest = rock.highest();
+
+            if (rock.highestYCoord() > highest) {
+                highest = rock.highestYCoord();
             }
 
             rocksPoints.addAll(rock.points());
-            if (repeatingI == 5) {
-                break;
-            }
         }
-//        for (int yCoord = highest; yCoord >= 0; yCoord--) {
-//            for (int j = 0; j < 7; j++) {
-//                if (rocksPoints.contains(new Point(j, yCoord))) {
-//                    System.out.print("#");
-//                } else {
-//                    System.out.print(".");
-//                }
-//            }
-//            System.out.println();
-//        }
+        // the first 5 repeated rocks were added to the heights, so we remove them from the list
         heightAdditions = heightAdditions.stream().limit(heightAdditions.size() - 5).toList();
-        System.out.println("I: " + i);
-        System.out.println("Highest: " + (highest + 1 - subtracting));
-        System.out.println("Repetition: " + heightAdditions.size());
+
+        long repetitions = 1000000000000L - i + 5;
         int loopSum = heightAdditions.stream().reduce(0, Integer::sum);
         int remSum = heightAdditions.stream()
-            .limit((1000000000000L - i + 4) % heightAdditions.size())
+            .limit(repetitions % heightAdditions.size())
             .reduce(0, Integer::sum);
-        System.out.println(loopSum * ((1000000000000L - i + 4) / heightAdditions.size()) + highest + 1 - subtracting + remSum);
+
+        System.out.println(
+            loopSum * (repetitions / heightAdditions.size())
+                + highest + 1
+                + remSum
+                - surplusHeight);
     }
 
-    private static boolean rockTouchingOtherRock(Set<Point> rocksPoints, Rock rock) {
-        for (Point p : rock.points()) {
-            if (rocksPoints.contains(new Point(p.getX(), p.getY() - 1))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean rockAtBottom(Rock rock) {
-        return rock.bottomEdge().get(0).getY() == 0;
+    private static boolean isFirst5AfterPattern(String pattern, int i) {
+        return i >= pattern.length() && i < pattern.length() + 5;
     }
 }

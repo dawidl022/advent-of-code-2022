@@ -14,25 +14,13 @@ public class Part1 {
             rock.move(0, highest + 4);
             boolean gasPushing = true;
 
-            while (gasPushing || !rockAtBottom(rock) && !rockTouchingOtherRock(rocksPoints, rock)) {
+            while (gasPushing || rock.canFall(rocksPoints)) {
                 if (gasPushing) {
                     Direction dirToMove = gasSource.next();
                     if (dirToMove == Direction.LEFT) {
-                        rock.move(-1, 0);
-                        for (Point p: rock.points()) {
-                            if (rocksPoints.contains(p)) {
-                                rock.move(1, 0);
-                                break;
-                            }
-                        }
+                        rock.moveLeftIfPossible(rocksPoints);
                     } else {
-                        rock.move(1, 0);
-                        for (Point p: rock.points()) {
-                            if (rocksPoints.contains(p)) {
-                                rock.move(-1, 0);
-                                break;
-                            }
-                        }
+                        rock.moveRightIfPossible(rocksPoints);
                     }
                 } else {
                     rock.move(0, -1);
@@ -40,26 +28,11 @@ public class Part1 {
                 gasPushing = !gasPushing;
             }
 
-
-            if (rock.highest() > highest) {
-                highest = rock.highest();
+            if (rock.highestYCoord() > highest) {
+                highest = rock.highestYCoord();
             }
             rocksPoints.addAll(rock.points());
-
         }
         System.out.println(highest + 1);
-    }
-
-    private static boolean rockTouchingOtherRock(Set<Point> rocksPoints, Rock rock) {
-        for (Point p : rock.points()) {
-            if (rocksPoints.contains(new Point(p.getX(), p.getY() - 1))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean rockAtBottom(Rock rock) {
-        return rock.bottomEdge().get(0).getY() == 0;
     }
 }
